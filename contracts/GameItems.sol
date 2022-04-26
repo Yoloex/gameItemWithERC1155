@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/token/ERC1155/ERC1155.sol";
 import "openzeppelin-solidity/contracts/access/AccessControl.sol";
 import "openzeppelin-solidity/contracts/access/Ownable.sol";
 
-contract GameItems is ERC1155, AccessControl, Ownable{
+contract GameItems is ERC1155, Ownable{
     
     uint public constant GT = 0;
     uint public rate; // This is used for exchanging ETH with GT token. It's the amount of Wei per GT. 
@@ -22,8 +22,8 @@ contract GameItems is ERC1155, AccessControl, Ownable{
         decimal = 2;
     }
 
-    function supportsInterface(uint _id) internal returns(bool){
-        return supportsInterface(_id);
+    function supportsInterface(bytes4 interfaceId) public view override(ERC1155) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 
     function changeRate(uint _rate) public onlyOwner {
@@ -39,4 +39,18 @@ contract GameItems is ERC1155, AccessControl, Ownable{
         _mint(msg.sender, tokenNum, 1, "");
         return tokenNum;
     }
+
+    function buyNFT(uint _id) public {
+        require(_id != GT, "You can only buy Items.");
+        require(balanceOf(owner(), _id) == 1, "There is no Item you want!!!");
+        require(balanceOf(msg.sender, GT) > tokenPrice[_id], "You don't have enough GT.");
+        safeTransferFrom(owner(), msg.sender, _id, 1, "");
+    }
+
+    function buyGT(uint _amount) public{
+        require(msg.value == _amount * rate, "Incorrect!!!");
+        safeTransferFrom(owner(), msg.sender, GT, _amount, "");
+    }
+
+
 }
