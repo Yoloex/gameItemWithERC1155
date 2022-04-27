@@ -12,22 +12,37 @@ contract GameItems is ERC1155, Ownable{
     uint public tokenNum;
     uint public decimal;
 
-    mapping(uint => uint) public tokenPrice;
-    mapping(string => uint) public nameToId;
+    mapping (uint => uint) public tokenPrice;
+    mapping (string => uint) public nameToId;
     mapping (string => bool) public tokenExist;
 
-    constructor () {
+    event BuyGT(address _buyer, uint _amount);
+    event BuyNFT(address _buyer, uint _id);
+
+    constructor () ERC1155("") {
         _mint(msg.sender, GT, 10**8, "");
         rate = 10**13;
         decimal = 2;
+    }
+
+    function getTokenId() public pure returns(uint) {
+        return GT;
+    }
+
+    function getNFTPrice(uint _id) public view returns(uint) {
+        return tokenPrice[_id];
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC1155) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
-    function changeRate(uint _rate) public onlyOwner {
+    function setRate(uint _rate) public onlyOwner {
         rate = _rate;
+    }
+
+    function getRate() public view returns(uint) {
+        return rate;
     }
 
     function createNFT(string memory _name, uint _price) public onlyOwner returns(uint){
@@ -39,18 +54,4 @@ contract GameItems is ERC1155, Ownable{
         _mint(msg.sender, tokenNum, 1, "");
         return tokenNum;
     }
-
-    function buyNFT(uint _id) public {
-        require(_id != GT, "You can only buy Items.");
-        require(balanceOf(owner(), _id) == 1, "There is no Item you want!!!");
-        require(balanceOf(msg.sender, GT) > tokenPrice[_id], "You don't have enough GT.");
-        safeTransferFrom(owner(), msg.sender, _id, 1, "");
-    }
-
-    function buyGT(uint _amount) public{
-        require(msg.value == _amount * rate, "Incorrect!!!");
-        safeTransferFrom(owner(), msg.sender, GT, _amount, "");
-    }
-
-
 }
